@@ -91,6 +91,8 @@ let settings = PlaySettings.shared
     @objc lazy var limitMotionUpdateFrequency = settingsData.limitMotionUpdateFrequency
 
     @objc lazy var disableBuiltinMouse = settingsData.disableBuiltinMouse
+
+    @objc lazy var bypassMouseToPointer = settingsData.bypassMouseToPointer
 }
 
 struct AppSettingsData: Codable {
@@ -120,4 +122,5 @@ struct AppSettingsData: Codable {
     var checkMicPermissionSync = false
     var limitMotionUpdateFrequency = false
     var disableBuiltinMouse = false
+    var bypassMouseToPointer = false
 }

@@ -13,6 +13,7 @@ public class PlayCover: NSObject {
 
     @objc static public func launch() {
         quitWhenClose()
+        setupIndirectInputSupport()
         AKInterface.initialize()
         PlayInput.shared.initialize()
         DiscordIPC.shared.initialize()
@@ -20,6 +21,15 @@ public class PlayCover: NSObject {
         if PlaySettings.shared.rootWorkDir {
             // Change the working directory to / just like iOS
             FileManager.default.changeCurrentDirectoryPath("/")
+        }
+    }
+
+    static private func setupIndirectInputSupport() {
+        // If mouse bypass is enabled, inject UIApplicationSupportsIndirectInputEvents support
+        if PlaySettings.shared.bypassMouseToPointer {
+            // Inject the indirect input support into the app's info dictionary
+            let infoDictionary = Bundle.main.infoDictionary as? NSMutableDictionary
+            infoDictionary?["UIApplicationSupportsIndirectInputEvents"] = true
         }
     }
 

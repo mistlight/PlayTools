@@ -13,6 +13,7 @@ import Foundation
 private struct AKAppSettingsData: Codable {
     var hideTitleBar: Bool?
     var floatingWindow: Bool?
+    var bypassMouseToPointer: Bool?
 }
 
 class AKPlugin: NSObject, Plugin {
@@ -178,6 +179,11 @@ class AKPlugin: NSObject, Plugin {
     func setupMouseMoved(_ mouseMoved: @escaping (CGFloat, CGFloat) -> Bool) {
         let mask: NSEvent.EventTypeMask = [.leftMouseDragged, .otherMouseDragged, .rightMouseDragged]
         NSEvent.addLocalMonitorForEvents(matching: mask, handler: { event in
+            // If mouse bypass is enabled, allow pointer events to pass through
+            if self.bypassMouseToPointerSetting {
+                return event
+            }
+
             let consumed = mouseMoved(event.deltaX, event.deltaY)
             if consumed {
                 return nil
@@ -186,6 +192,11 @@ class AKPlugin: NSObject, Plugin {
         })
         // transpass mouse moved event when no button pressed, for traffic light button to light up
         NSEvent.addLocalMonitorForEvents(matching: .mouseMoved, handler: { event in
+            // If mouse bypass is enabled, allow pointer events to pass through
+            if self.bypassMouseToPointerSetting {
+                return event
+            }
+
             _ = mouseMoved(event.deltaX, event.deltaY)
             return event
         })
@@ -235,6 +246,12 @@ class AKPlugin: NSObject, Plugin {
             if event.window != NSApplication.shared.windows.first! {
                 return event
             }
+
+            // If mouse bypass is enabled, allow pointer events to pass through
+            if self.bypassMouseToPointerSetting {
+                return event
+            }
+
             if consumed(event.buttonNumber, true) {
                 return nil
             }
@@ -245,6 +262,12 @@ class AKPlugin: NSObject, Plugin {
             if isInTrafficLightArea(event) {
                 return event
             }
+
+            // If mouse bypass is enabled, allow pointer events to pass through
+            if self.bypassMouseToPointerSetting {
+                return event
+            }
+
             if consumed(event.buttonNumber, false) {
                 return nil
             }
@@ -254,6 +277,11 @@ class AKPlugin: NSObject, Plugin {
 
     func setupScrollWheel(_ onMoved: @escaping (CGFloat, CGFloat) -> Bool) {
         NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask.scrollWheel, handler: { event in
+            // If mouse bypass is enabled, allow pointer events to pass through
+            if self.bypassMouseToPointerSetting {
+                return event
+            }
+
             var deltaX = event.scrollingDeltaX, deltaY = event.scrollingDeltaY
             if !event.hasPreciseScrollingDeltas {
                 deltaX *= 16
@@ -278,6 +306,7 @@ class AKPlugin: NSObject, Plugin {
     /// Convenience instance property that exposes the cached static preference.
     private var hideTitleBarSetting: Bool { Self.akAppSettingsData?.hideTitleBar ?? false }
     private var floatingWindowSetting: Bool { Self.akAppSettingsData?.floatingWindow ?? false }
+    private var bypassMouseToPointerSetting: Bool { Self.akAppSettingsData?.bypassMouseToPointer ?? false }
 
     fileprivate static var akAppSettingsData: AKAppSettingsData? = {
         let bundleIdentifier = Bundle.main.bundleIdentifier ?? ""
